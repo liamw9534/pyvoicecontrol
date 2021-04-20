@@ -61,17 +61,14 @@ class AudioAlerts(service.ServiceResource):
         """
         mtype = msg.type
         if mtype == Gst.MessageType.EOS:
-            logger.debug('EOS')
             self._set_state_internal(state='READY')
             pipeline.set_state(Gst.State.NULL)
         elif mtype == Gst.MessageType.STATE_CHANGED:
             old, new, pending = msg.parse_state_changed()
             state = Gst.Element.state_get_name(new)
-            logger.debug('STATE_CHANGED: %s', state)
             if state == 'READY':
                 self._set_state_internal(state='PLAYING')
         elif mtype == Gst.MessageType.ERROR:
-            logger.debug('ERROR')
             self._set_state_internal(state='READY')
             pipeline.set_state(Gst.State.NULL)
 

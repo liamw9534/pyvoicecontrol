@@ -22,7 +22,7 @@ schema = {
         'vad_max_silence_period_sec': {'type': float, 'default': 5 },
         'sensitivity': {'type': str, 'default': '0.5' },
         'pipeline': {'type': str,
-                     'default': 'pulsesrc ! snowboy name=sb resource={} models={} sensitivity={} ! removesilence name=rm hysteresis={} remove=0 threshold={} minimum-silence-time={} silent=1 gate=1 ! udpsink port={} sync=false' },
+                     'default': 'pulsesrc ! snowboy name=sb resource={} models={} sensitivity={} ! removesilence name=rm hysteresis={} remove=0 threshold={} minimum-silence-time={} silent=1 gate=1 ! udpsink host=127.0.0.1 port={} sync=false' },
     },
     'wit_speech': {
         'enable': enable_schema,

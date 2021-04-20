@@ -23,6 +23,7 @@ setup(
     install_requires=['snapcast>=2.1.2',
                       'pykka>=3.0.0',
                       'requests>=2.25.1',
+                      'pexpect>=4.8.0',
                       'spotipy>=2.17.1',
                       'nested-lookup>=0.2.22',
                       'evdev>=1.4.0',

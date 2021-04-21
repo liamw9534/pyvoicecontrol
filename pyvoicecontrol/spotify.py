@@ -152,9 +152,10 @@ class SpotifyService(service.ServiceResource):
         item = entities.get('playable_item:playable_item', [{}])[0].get('value', None)
         author = entities.get('playable_author:playable_author', [{}])[0].get('value', None)
         if item and author is None:
-            for tag in ['track', 'album', 'artist']:
+            for tag in ['track', 'album', 'artists', 'artist']:
                 if item.startswith(tag + ' '):
-                    item = item.replace(tag + ' ', tag + ':')
+                    subst_tag = 'artist' if tag == 'artists' else tag
+                    item = item.replace(tag + ' ', subst_tag + ':')
             logger.info('search term: "%s"', item)
             t = 'artist,album,track'
             result = self._client.search(item, type=t, limit=self._config['limit'])

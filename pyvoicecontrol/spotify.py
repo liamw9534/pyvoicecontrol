@@ -24,7 +24,8 @@ class SpotifyService(service.ServiceResource):
         self._auth = SpotifyOAuth(self._config['client_id'],
                                   self._config['client_secret'],
                                   self._config['redirect_uri'],
-                                  scope=scope
+                                  scope=scope,
+                                  open_browser=False
                                   )
         self._client = spotipy.Spotify(client_credentials_manager=self._auth)
         self._setup_device_id()

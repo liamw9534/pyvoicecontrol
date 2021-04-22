@@ -3,6 +3,7 @@ import requests
 import socket
 import sys
 import json
+from nested_lookup import nested_alter
 
 from gi.repository import GObject
 
@@ -74,6 +75,8 @@ class WitAISpeechService(service.ServiceResource):
     def _decode_result(self, result):
         intent = json.loads(result)
         logger.info('you said "%s"', intent.get('text', ''))
+        # Cleanup the output, remove wit$ occurrences
+        nested_alter(intent, 'name', lambda x: x.replace('wit$', ''), in_place=True)
         self._set_state_internal(state='INTENT', intent=intent)
 
     def _set_state_internal(self, state=None, intent=None, force=False):

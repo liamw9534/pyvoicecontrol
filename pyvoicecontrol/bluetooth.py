@@ -33,9 +33,13 @@ class Bluetooth(service.ServiceResource):
         self._thread.start()
         self._set_state_internal(force=True)
 
-    def scan_devices(self):
-        logger.debug('Scanning...')
+    def start_scan(self):
+        logger.debug('Scan on')
         self._bluetooth.start_scan()
+
+    def stop_scan(self):
+        logger.debug('Scan off')
+        self._bluetooth.stop_scan()
 
     def pair_device(self, device):
         logger.debug('Pairing %s...', device)
@@ -54,21 +58,27 @@ class Bluetooth(service.ServiceResource):
     def process_devices(self):
         while not self._stopping:
             devs = {}
+            waiting_for_connection = False
             for d in self._config['devices']:
                 devs[d] = {}
                 state = self._bluetooth.get_device_info(d, timeout=1)
                 logger.debug('device %s state %s', d, state)
                 if not state:
                     logger.debug('device %s unavailable, scanning...', d)
+                    waiting_for_connection = True
                     devs[d]['state'] = 'SCANNING'
-                    self._proxy.scan_devices()
+                    self._proxy.start_scan()
                 else:
                     if state['Paired'] == 'no':
+                        waiting_for_connection = True
+                        self._proxy.start_scan()
                         if d in self._devices and self._devices[d]['state'] != 'PAIRING':
                             logger.info('Pairing %s', d)
                         devs[d]['state'] = 'PAIRING'
                         self._proxy.pair_device(d)
                     elif state['Connected'] == 'no':
+                        waiting_for_connection = True
+                        self._proxy.start_scan()
                         if d in self._devices and self._devices[d]['state'] != 'CONNECTING':
                             logger.info('Connecting %s', d)
                         devs[d]['state'] = 'CONNECTING'
@@ -77,6 +87,8 @@ class Bluetooth(service.ServiceResource):
                         if d in self._devices and self._devices[d]['state'] != 'CONNECTED':
                             logger.info('Connected %s', d)
                         devs[d]['state'] = 'CONNECTED'
+                if not waiting_for_connection:
+                    self._proxy.stop_scan()
             self._set_state_internal(devices=devs)
             time.sleep(2)
 

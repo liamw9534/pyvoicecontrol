@@ -43,11 +43,16 @@ class Input(service.ServiceResource):
                 logger.info('New device %s added', x.name)
                 self._devices.append(x.phys)
                 self._files[x.fileno()] = x
-                GObject.io_add_watch(x.fileno(), GObject.IO_IN, self.io_handler)
+                GObject.io_add_watch(x.fileno(), GObject.IO_IN | GObject.IO_ERR | GObject.IO_HUP, self.io_handler)
         return True
 
-    def io_handler(self, fd, _):
+    def io_handler(self, fd, flags):
         device = self._files[fd]
+        if flags & (GObject.IO_ERR | GObject.IO_HUP):
+            logger.info('Device %s removed', device.name)
+            self._devices.remove(device.phys)
+            del self._files[fd]
+            return False
         event = device.read_one()
         self._proxy.handle_key_event(event)
         return True
@@ -64,7 +69,7 @@ class Input(service.ServiceResource):
         else:
             self._set_state_internal(state='IDLE')
 
-    def _set_state_internal(self, state=None, action=None, force=False):
+    def _set_state_internal(self, state=None, action=None, devices=None, force=False):
         """Use this to actuate state changes and notify other listeners
            of any state changes via ServiceStateChangeRegistry.notify()
         """
@@ -76,10 +81,14 @@ class Input(service.ServiceResource):
             if action is not None and action != self._action:
                 self._action = action
                 changed = True
+            if devices is not None and devices != self._devices:
+                self._action = action
+                changed = True
         finally:
             if changed:
                 service.ServiceStateChangeRegistry.notify(self._path, self.get_state())
 
     def get_state(self):
         return { 'state': self._state.state,
+                 'devices': self._devices,
                  'action': self._action }

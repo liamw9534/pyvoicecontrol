@@ -41,6 +41,13 @@ class Bluetoothctl:
             print(e)
             return None
 
+    def stop_scan(self):
+        try:
+            self.execute_command("scan off", timeout=1)
+        except BluetoothctlError as e:
+            print(e)
+            return None
+
     def make_discoverable(self):
         try:
             self.execute_command("discoverable on", timeout=1)

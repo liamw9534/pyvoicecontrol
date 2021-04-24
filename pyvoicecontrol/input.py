@@ -23,15 +23,15 @@ class Input(service.ServiceResource):
             self._action_map[key] = action
 
     def on_start(self):
-        """Setup your service here and set any default state params that your service
-           provides.  Optionally register to state changes on other services using
-           ServiceStateChangeRegistry.register()
-        """
         self._state = service.ServiceStateMachine(['IDLE', 'ACTION'], default_state='IDLE')
         self._action = None
         self._set_state_internal(force=True)
         self._timeout = GObject.timeout_add(1000, self._proxy.update_available_inputs)
 
+    def on_stop(self):
+        GObject.source_remove(self._timeout)
+        service.ServiceResource.on_stop(self)
+        
     def update_available_inputs(self):
         devices = [evdev.InputDevice(x) for x in evdev.list_devices()]
         for x in devices:

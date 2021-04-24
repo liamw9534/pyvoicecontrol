@@ -2,9 +2,9 @@ from . import service
 import logging
 import spotipy
 from nested_lookup import nested_lookup
-
-
+from gi.repository import GObject
 from spotipy.oauth2 import SpotifyOAuth
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,13 @@ class SpotifyService(service.ServiceResource):
                                   open_browser=False
                                   )
         self._client = spotipy.Spotify(client_credentials_manager=self._auth)
-        self._setup_device_id()
+        self._device = {}
+        self.setup_device()
+        self._timeout = GObject.timeout_add(int(self._config['scan_period'] * 1000), self._proxy.setup_device)
+
+    def on_stop(self):
+        GObject.source_remove(self._timeout)
+        service.ServiceResource.on_stop(self)
 
     def notify(self, path, state):
         if path == '/speech/intent' and state['state'] == 'INTENT':
@@ -79,62 +85,65 @@ class SpotifyService(service.ServiceResource):
             else:
                 logger.warn('ignoring "%s" intent', action)
 
-    def _setup_device_id(self):
-        self._device_id = None
-        devices = None
+    def setup_device(self):
+        devices = self._client.devices()
         if self._config['device']:
-            devices = self._client.devices()
-            logger.info('devices: %s', devices)
+            logger.debug('devices: %s', devices)
             for x in devices['devices']:
                 if x['name'] == self._config['device']:
-                    logger.info('Found device "%s" with id=%s', x['name'], x['id'])
-                    self._device_id = x['id']
+                    if self._device.get('id', None) != x['id']:
+                        logger.info('Using Spotify Connect device "%s" with id=%s', x['name'], x['id'])
+                        self._device = x
                     return
-            logger.warn('Did not find device "%s"', self._config['device'])
+            logger.warn('Did not find Spotify Connect device "%s"', self._config['device'])
         current = self._client.current_playback()
         if current:
-            logger.warn('Using device id=%s instead', current['device']['id'])
-            self._device_id = current['device']['id']
+            if self._device.get('id', None) != current['device']['id']:
+                logger.warn('Using current Spotify Connect device id=%s instead', current['device']['id'])
+                self._device = current['device']
             return
         else:
-            device = devices['devices'][0] if devices['devices'] else None
+            device = devices['devices'][0] if devices.get('devices', None) else None
             if device:
-                logger.warn('Using device %s instead', device['name'])
-                self._device_id = device['id']
+                if self._device.get('id', None) != device['id']:
+                    logger.warn('Using first available Spotify Connect device %s instead', device['name'])
+                    self._device = device
                 return
-        logger.error('Did not find any device')
+        self._device = {}
+        logger.error('Did not find any Spotify Connect device on your network')
+        return True
 
     def _skip_track(self):
         logger.info('_skip_track')
-        self._client.next_track(device_id=self._device_id)
+        self._client.next_track(device_id=self._device.get('id', None))
 
     def _previous_track(self):
         logger.info('_previous_track')
-        self._client.previous_track(device_id=self._device_id)
+        self._client.previous_track(device_id=self._device.get('id', None))
 
     def _stop_music(self):
         logger.info('_stop_music')
-        self._client.start_playback(device_id=self._device_id, uris=[])
+        self._client.start_playback(device_id=self._device.get('id', None), uris=[])
 
     def _pause_music(self):
         logger.info('_pause_music')
-        self._client.pause_playback(device_id=self._device_id)
+        self._client.pause_playback(device_id=self._device.get('id', None))
 
     def _shuffle_music(self):
         logger.info('_shuffle_music')
-        self._client.shuffle(state=True, device_id=self._device_id)
+        self._client.shuffle(state=True, device_id=self._device.get('id', None))
 
     def _unshuffle_music(self):
         logger.info('_unshuffle_music')
-        self._client.shuffle(state=False, device_id=self._device_id)
+        self._client.shuffle(state=False, device_id=self._device.get('id', None))
 
     def _loop_music(self):
         logger.info('_loop_music')
-        self._client.repeat(state='context', device_id=self._device_id)
+        self._client.repeat(state='context', device_id=self._device.get('id', None))
 
     def _unloop_music(self):
         logger.info('_unloop_music')
-        self._client.repeat(state='off', device_id=self._device_id)
+        self._client.repeat(state='off', device_id=self._device.get('id', None))
 
     def _toggle_music(self):
         current = self._client.current_playback()
@@ -145,7 +154,7 @@ class SpotifyService(service.ServiceResource):
 
     def _resume_music(self):
         logger.info('_resume_music')
-        self._client.start_playback(device_id=self._device_id)
+        self._client.start_playback(device_id=self._device.get('id', None))
 
     def _play_music(self, entities):
         logger.debug('_play_music entities=%s', entities)
@@ -162,7 +171,7 @@ class SpotifyService(service.ServiceResource):
             uris = [x for x in nested_lookup('uri', result) if ':track:' in x]
             logger.info('got %s results', len(uris))
             if uris:
-                self._client.start_playback(device_id=self._device_id, uris=uris)
+                self._client.start_playback(device_id=self._device.get('id', None), uris=uris)
         elif item:
             for tag in ['track', 'album']:
                 if item.startswith(tag + ' '):
@@ -174,7 +183,7 @@ class SpotifyService(service.ServiceResource):
             uris = [x for x in nested_lookup('uri', result) if ':track:' in x]
             logger.info('got %s results', len(uris))
             if uris:
-                self._client.start_playback(device_id=self._device_id, uris=uris)
+                self._client.start_playback(device_id=self._device.get('id', None), uris=uris)
 
     def _set_state_internal(self, state=None, force=False):
         try:

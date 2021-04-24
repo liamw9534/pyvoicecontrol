@@ -53,6 +53,7 @@ schema = {
         'redirect_uri': {'type': str },
         'device': {'type': str },
         'limit': {'type': int, 'default': 10 },
+        'scan_period': {'type': float, 'default': 60 },
     },
     'snapcast': {
         'enable': enable_schema,

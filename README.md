@@ -57,18 +57,22 @@ More information on this can be found later on.  Also refer to <http://wit.ai> t
 
 ### Hardware
 
-I am using a mixture of Raspberry Pi 3, Pi Zero (W) and PCs on my test system.  You'll need a microphone and
-speaker for your devices.  I bought the following devices to test it out:
+I am using a mixture of Raspberry Pi 3, Pi Zero (W) and PC on my test system.  You'll need a microphone and
+speaker for your devices.  I initially bought the following devices during development:
 
 * USB mic <https://www.amazon.co.uk/gp/product/B08333Q2ZS/ref=ppx_yo_dt_b_asin_title_o02_s00?ie=UTF8&psc=1>
 * Elari Nanobeat Bluetooth Speaker <https://www.amazon.co.uk/gp/product/B074RHZC7T/ref=ppx_yo_dt_b_asin_title_o07_s00?ie=UTF8&psc=1>
 
-I use the Raspberry Pi 3 to run a `snapserver` that sources from `librespot` and runs a `snapclient` and `pyvoicecontrol`
+However, the above USB mic is not very sensitive and also very noisy.  If you want better range (3m +) then a conferencing style of
+USB mic is a better option e.g., <https://www.amazon.co.uk/gp/product/B08D3KGFY4>.  I've used this USB mic with good results.
+
+I use a Raspberry Pi 3 to run a `snapserver` that sources from `librespot` and runs a `snapclient` and `pyvoicecontrol`
 session for its attached mic and speaker.
 
-I use Pi Zero (W) to run ancilliary devices in different rooms around the house where I want music.  Each one
+I also use Raspberry Pi 3 and Pi Zero (W) as ancilliary devices in different rooms around the house where I want music.  Each one
 runs `snapclient` and `pyvoicecontrol`.
 
+Everything runs acceptably on the Pi Zero (W) but with noticably more latency when performing online speech-to-text than a Pi 3.
 
 ## Software Installation
 

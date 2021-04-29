@@ -669,6 +669,7 @@ client ID, client secret and redirect URI.  This implementation uses `pyspotify`
 * `redirect_uri` - redirect uri setup for your spotify application created in the developer dashboard.
 * `device` - the spotify connect device name on your network that shall be used for sessions.
 * `limit` - maximum number of search results returned by the server when performing searches.
+* `scan_period` - time (as float) for how often to scan to check the available device list; default is 60 seconds
 
 ## Input device service (`/input`)
 

@@ -30,15 +30,15 @@ Refer to the installation section for more information.
 This software will run on Ubuntu 18.04 and Raspbian Buster based distributions.
 
 This project uses `snowboy` for hotword detection.  See <https://github.com/seasalt-ai/snowboy> for
-more information about what `snowboy` is.  Sadly `snowboy` is no longer supported by the community
-but there are sufficient remnants of a project to make use of it, and there is nothing better.  It
-runs on both `x86_64` and `armhf` architectures.
+more information about what `snowboy` is.  Sadly `snowboy` is not a fully open source project and
+the core is only ported to certain architectures, but it runs on both `x86_64` and `armhf`
+architectures.
 
 The audio processing pipeline is implemented using `gstreamer-1.14`.  There are also two
 bespoke `gstreamer` plugins that have been developed for this project that must be compiled for your
 system to use this application.  These are:
 
-* `gst-snowboy` - available at <https://github.com/liamw9534/snowboy/tree/gst-plugin>.
+* `gst-snowboy` - available at <https://github.com/seasalt-ai/snowboy>.
 * `gst-removesilence` - available at <https://github.com/liamw9534/gst-removesilence>; this is a slightly
   customised derivative of the excellent `removesilence` gst plugin that is shipped as standard with 1.19
   version of `gstreamer` to make the VAD a bit easier to manage.
@@ -106,7 +106,7 @@ sudo usermod -a -G bluetooth <your-user-name e.g., pi>
 Now build the gstreamer `snowboy` plugin and add it to `GST_PLUGIN_PATH`:
 
 ```
-git clone https://github.com/liamw9534/snowboy
+git clone https://github.com/seasalt-ai/snowboy
 pushd snowboy
 git checkout origin/gst-plugin
 cd examples/C++/gstreamer/gst-snowboy
@@ -784,7 +784,7 @@ which provides a default implementation of the service.
 
 Just a collection of ideas at this stage:
 
-* Automate `spotify` client authorization process
+* Automate `spotify` initial client authorization
 * Allow external plugin packages for end user extensibility
 * JSON API for controlling resources over a websocket
 * Javascript library implementation for websocket usage
